@@ -101,7 +101,10 @@ class BlockingQueue:
 
     def read_get_log (self,o): #restituisce il tempo in cui l'oggetto o risulta essere stato prelevato per l'ultima volta dalla coda.
         with self.lock:
-            if self.logging == False: raise Exception("Logging non attivo")
+            if self.logging == False:
+                print("Logging non attivo")
+                return
+                #raise Exception("Logging non attivo")
             for i in range(len(self.log)-1, -1, -1):
                 if self.log[i][0] == "get" and self.log[i][1] == o:
                     return self.log[i][2]
@@ -109,7 +112,10 @@ class BlockingQueue:
 
     def read_put_log (self,o): #restituisce il tempo in cui l'oggetto o risulta essere stato inserito per l'ultima volta nella coda.
         with self.lock:
-            if self.logging == False: raise Exception("Logging non attivo")
+            if self.logging == False:
+                print("Logging non attivo")
+                return
+                #raise Exception("Logging non attivo")
             for i in range(len(self.log)-1, -1, -1):
                 if self.log[i][0] == "put" and self.log[i][1] == o:
                     return self.log[i][2]
@@ -122,6 +128,16 @@ class BlockingQueue:
             put = self.read_put_log(o)
             if get == 0 or put == 0: return -1
             return get-put
+
+    def print_log(self):
+        with self.lock:
+            print("Log stamp:")
+            if self.logging == False:
+                print("Logging non attivo")
+                return
+                #raise Exception("Logging non attivo")
+            for i in range(len(self.log)):
+                print(self.log[i])
 
 
 
@@ -205,6 +221,7 @@ def main():
     # Attiva e disattiva il logging casualmente durante l'esecuzione
     for _ in range(20):  # Esegui 20 cambiamenti casuali
         sleep(random.uniform(0.5, 2))  # Aspetta un intervallo di tempo casuale
+        coda.print_log() # per testare il metodo print_log
         if random.choice([True, False]):
             # Attiva il logging
             M = random.randint(1, 10)  # Numero massimo di log
