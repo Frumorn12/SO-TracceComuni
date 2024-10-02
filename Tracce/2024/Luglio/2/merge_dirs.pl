@@ -20,7 +20,7 @@ qx(rm -rf merged/*); # svuoto la cartella merged
 
 # Copio il contenuto della prima cartella nella cartella merged
 # @ARGV è un array che contiene i parametri passati allo script
-# in questo caso @ARGV contiene i percorsi delle due cartelle
+# in questo caso @ARG12V contiene i percorsi delle due cartelle
 
 qx(cp -p $ARGV[0]/* merged 2>/dev/null); #se si passa una cartella a cp, viene dato un errore, quindi facciamo il redirect di STDERR in /dev/null. cp -p consente di copiare il file senza alterare la data di ultima modifica
 
@@ -46,7 +46,7 @@ for $f (@all){#per ogni file in merged
     if(defined $owner{$f}){#se ho tenuto traccia di chi Ã¨ il proprietario (vuol dire che potrebbe essere duplicato o comunque presente nella seconda cartella)
         $new_line.=": $owner{$f}/$f  ";
         if(defined $overwritten{$f}){#controllo se Ã¨ un duplicato
-            $new_line.=": SOVRASCRITTO";
+            $new_line.=": SOVRASCRITTO"; #se Ã¨ un duplicato, lo indico nella riga
         }
     }
     else{
