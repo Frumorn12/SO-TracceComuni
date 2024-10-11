@@ -1,15 +1,18 @@
 #!/usr/bin/perl
-
+# 
+# ARGV contiene i parametri passati allo script ./comments.pl file.h, agrv contiene i parametri passati allo script ./comments.pl file.h 
 if($#ARGV==-1){ # se non ci sono parametri
     print qx{ls /usr/include | grep -P "\.h\$"}; # stampa tutti i file .h in /usr/include 
+    # ls /usr/include elenca i file in /usr/include, grep -P "\.h\$" filtra i file che terminano con .h
+    # qx() esegue il comando tra parentesi e restituisce l'output 
 }
 elsif($#ARGV==0){ # se c'è un solo parametro 
     $cont=0; # contatore per l'array dei commenti
     $file = shift @ARGV; # prendo il primo parametro 
     @file = qx(cat /usr/include/$file); # leggo il file 
-    for (@file){ # per ogni riga del file
-        if(/\/\*(.*)/){ # se trovo un commento multilinea 
-            if(/\/\*(.*)\*\//){ # se il commento multilinea è tutto sulla stessa riga 
+    for (@file){ # per ogni riga del file 
+        if(/\/\*(.*)/   ){ # se trovo un commento multilinea,  /*   CICCIO     */    / \/\ / 
+            if(/\/\*(.*)\*\//){ # se il commento multilinea è tu1tto sulla stessa riga 
                 $comments[$cont]=$1; # lo metto nell'array dei commenti 
                 $cont++; # incremento il contatore
                 next; # passo alla prossima riga

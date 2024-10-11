@@ -17,7 +17,7 @@ $to_print=qx(wc ../*.pl -l | head -n -1 | sort -n | head -n 1); # wc -l conta le
 
 @splitted = split " ",$to_print; # split divide la stringa in un array di stringhe, utilizzando lo spazio come separatore 
 
-print $to_print; # stampo il numero di righe di ciascun file
+#print $to_print; # stampo il numero di righe di ciascun file
 qx(chmod a-x $splitted[1]); # rimuovo il diritto di eseguibilità dal file con meno righe 
 
 # chmod a-x rimuove il diritto di eseguibilità dal file
@@ -25,10 +25,10 @@ qx(chmod a-x $splitted[1]); # rimuovo il diritto di eseguibilità dal file con m
 # split divide la stringa in un array di stringhe, utilizzando lo spazio come separatore
 # print stampa il numero di righe di ciascun file
 # wc -l conta le righe di ciascun file
-# head -n -1 esclude l'ultima riga (che contiene il totale)
+# head -n -1 esclude l'ultima riga (che contiene il totale), mostrando tutte le altre
 # sort -n ordina i file in base al numero di righe
 # head -n 1 restituisce il primo file della lista 
 # ../*.pl seleziona tutti i file con estensione .pl nella cartella superiore
-# $to_print contiene l'output del comando wc -l
+# $to_print contiene l'output del comando wc -l ... 
 # $splitted[1] contiene il nome del file con meno righe
 # $splitted[0] contiene il numero di righe del file con meno righe
