@@ -1,0 +1,7 @@
+PRODOTTO|PREZZO
+skechers|49.90
+adidas|69.99
+nike|69.99
+lotto|29.90
+bata|19.99
+puma|70.00

@@ -1,0 +1,9 @@
+PRODOTTO|PREZZO
+pasta|0.99
+tonno|3.49
+pesto|3.49
+cous cous|0.49
+simmental|2.15
+maionese|5.00
+olive|1.50
+sugo|3.25

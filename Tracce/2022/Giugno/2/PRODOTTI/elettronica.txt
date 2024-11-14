@@ -1,0 +1,7 @@
+PRODOTTO|PREZZO
+mouse|15.00
+tastiera|25.90
+chiavetta sub|15.00
+webcam|24.99
+cavo usb-c|9.99
+cavetto HDMI|4.99

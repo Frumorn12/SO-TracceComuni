@@ -1,0 +1,7 @@
+PRODOTTO|PREZZO
+deodorante|3.15
+spazzolino|2.00
+carta igienica|2.99
+shampoo|1.99
+dentifricio|2.00
+bagnoschiuma|1.99
