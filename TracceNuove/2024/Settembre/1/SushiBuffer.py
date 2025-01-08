@@ -4,7 +4,8 @@ from threading import RLock, Condition, Thread
 from time import sleep
 import random
 
-debug = True
+#Diamo per scontato che Pietro Cimino lo ha lungo
+debug = True # Mi fa piacere
 
 #
 # Stampa sincronizzata
@@ -23,16 +24,18 @@ def dprint(s):
 
 class RunningSushiBuffer:
     
-    def __init__(self, dim):
+    def __init__(self, dim, posizioniCuochi):
         self.theBuffer = [None] * dim
         #
         # All'inizio la posizione 0 corrisponde proprio con la posizione 0 del buffer
         #
+        self.posizioniCuochi = posizioniCuochi # Lista delle posizioni dei cuochi 
         self.zeroPosition = 0
         self.dim = dim
         self.lock = RLock()
         self.condition = Condition(self.lock)
         self.direzione = True # True = orario , False = antiorario 
+        
 
     #
     # Questo metodo serve a virtualizzare gli indici del buffer circolare
@@ -40,7 +43,7 @@ class RunningSushiBuffer:
     # va considerato come elemento 0
     #
     def __getRealPosition(self,i : int):
-        return (i + self.zeroPosition) % self.dim    
+        return (i + self.zeroPosition) % self.dim  # 
 
     def get(self, pos : int):
         with self.lock:
@@ -66,9 +69,9 @@ class RunningSushiBuffer:
             # 
 
             if (self.direzione):
-                self.zeroPosition = (self.zeroPosition + j) % self.dim
+                self.posizioniCuochi = [(x + j) % self.dim for x in self.posizioniCuochi] # % restituisce sempre un numero positivo
             else:
-                self.zeroPosition = (self.zeroPosition - j) % self.dim # % restituisce sempre un numero positivo 
+                self.posizioniCuochi = [(x - j) % self.dim for x in self.posizioniCuochi] # % restituisce sempre un numero positivo 
 
 
             # 
@@ -119,11 +122,18 @@ class RunningSushiBuffer:
                     self.__attendi_shift(t,i)
             return retList
     
-    # Punto 1 : Aggiungere un metoo cambiaVerso che modifica la direzione di scorrimento del nastro
+    # Punto 1 : Aggiungere un metodo cambiaVerso che modifica la direzione di scorrimento del nastro
 
     def cambiaVerso(self): 
         with self.lock :
-            self.direzione = not self.direzione 
+            self.direzione = not self.direzione
+
+    #Per il punto 2 abbiamo creato un metodo stampaStato che stampa lo stato del buffer gestito con il lock
+    def stampaStato(self):
+        with self.lock:
+            sprint(f"Stato del buffer : {self.theBuffer}")
+            sprint(f"Posizione 0 : {self.zeroPosition}")
+            sprint(f"Direzione : {self.direzione}")
         
 
 
@@ -142,7 +152,24 @@ class NastroRotante(Thread):
             sleep(0.1)
             self.iterazioni -= 1
             self.d.shift()
+
+#Per il Punto 2 abbiamo creato una classe display che stampa lo stato del buffer ogni 2 secondi
+#Ricorda quando la tracciati chiede di fare una stampa periodica, bisogna creare un thread apposito
+class Display(Thread):
+    def __init__(self, d : RunningSushiBuffer):
+        super().__init__()
+        self.d = d
+    
+    def run(self):
+        while(True):
+            sleep(2)
+            self.d.stampaStato()
+
+
+
             
+
+
 class Cuoco(Thread):
     
     piatti = [ "*", ";", "^", "%", "!", "@" ]
@@ -198,7 +225,7 @@ class GruppoClienti(Thread):
             dprint ( f"Il gruppo clienti {self.ident} mangia con gusto dei <{self.d.getList(self.numClienti,self.cosaCheNonVogliamoMangiare,self.pos)}>")
 
 size = 20
-D = RunningSushiBuffer(size)
+D = RunningSushiBuffer(size, [0,3,7])
 NastroRotante(D).start()
 for i in range(0,2):
     Cuoco(D).start()
@@ -207,3 +234,4 @@ for i in range(1,10):
 for i in range(10,20):
     GruppoClienti(D,i,random.randint(2,5)).start()
 
+Display(D).start() 
