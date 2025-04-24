@@ -70,7 +70,6 @@ class Sede:
         self.lock = RLock()
         self.condition = Condition(self.lock)
         self.ultimiTicket = []
-        self.ticketChiamati = [] 
         self.update = False
         self.setPrintAttese = False
 
@@ -92,8 +91,7 @@ class Sede:
             #
             self.update = True
             if(len(self.ultimiTicket) >= 5):
-                self.ticketChiamati.appemd(self.ultimiTicket.pop())
-                
+                self.ultimiTicket.pop()
             self.ultimiTicket.insert(0,ticket)
             
 
@@ -101,16 +99,6 @@ class Sede:
         with self.lock:
             while(ticket not in self.ultimiTicket):
                 self.condition.wait()
-
-    def waitForTicketSafe(self,ticket):
-        with self.lock:
-            if ticket in self.ultimiTicket:
-                return False
-            
-            while (ticket not in self.ultimiTicket):
-                self.condition.wait()
-            return True 
-
 
     #
     # Serve a segnalare al display di stampare il riepilogo
