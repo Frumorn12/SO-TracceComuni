@@ -5,12 +5,29 @@ import multiprocessing
 from threading import Condition, Lock, Thread
 import time
 
+"""
+
+Punto 1:
+Si modifichi la logica di funzionamento del DistributoreNumeri in maniera tale da distribuire D numeri da verificare per
+volta. La quantità D, che di default vale 10, deve essere modificabile dinamicamente (e cioè anche durante la fase di calcolo
+dei Macinatori) attraverso il metodo thread safe DistributoreNumeri.setQuantita(d);
+Invece, al posto del metodo DistributoreNumeri.getNextNumber() i Macinatori dovranno usare il metodo
+DistributoreNumeri.getNextInterval() che restituisce un intervallo composto da D numeri da far calcolare
+al Macinatore chiamante. L’intervallo assegnato può essere più piccolo di D nel caso in cui i numeri restanti da testare
+siano di meno.
+Ad esempio, supponiamo che D=20 ed nthread=2.
+Quando si invoca contaPrimiMultiThread(101,175), il distributore di numeri assegnerà ai due Macinatori, mano a
+mano che questi ne fanno richiesta, gli intervalli (101,120), (121,140), (141,160), (161,175).
+La modifica deve essere compatibile con eventuali Macinatori che continuino a usare getNextNumber (e cioè che
+continuano a prelevare un numero per volta)
+"""
+
 class DistributoreNumeri:
 
     def __init__(self,min,max):
-        self.min = min
-        self.max = max
-        self.numCorrente = min
+        self.min = min # minimo numero da calcolare 
+        self.max = max # massimo numero da calcolare 
+        self.numCorrente = min # numero corrente da calcolare 
         self.lock = Lock()
     '''
         Utilizzato dai macinatori per avere un numero da calcolare

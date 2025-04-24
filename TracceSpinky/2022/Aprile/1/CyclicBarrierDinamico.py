@@ -5,10 +5,10 @@ import time
 
 class DistributoreNumeri:
     def __init__(self, min, max):
-        self.min = min
-        self.max = max
-        self.numCorrente = min
-        self.quantita = 10
+        self.min = min # minimo numero da calcolare
+        self.max = max # massimo numero da calcolare 
+        self.numCorrente = min # numero corrente da calcolare 
+        self.quantita = 10 # quantità di numeri da calcolare per volta 
         self.lock = Lock()
 
     def getNextNumber(self):
