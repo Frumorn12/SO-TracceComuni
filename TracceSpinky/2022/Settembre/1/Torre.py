@@ -18,8 +18,8 @@ class TorreInCostruzione:
     def __init__(self,H : int):
         self.altFinale = H
         self.larghezzaFinale = 3
-        self.stratoAttuale = 0
-        self.tipiStrato = ['-','*']          # oscilleremo tra 0 e 1
+        self.stratoAttuale = 0 # inizialmente la torre Ã¨ vuota
+        self.tipiStrato = ['-','*','!']          # oscilleremo tra 0 e 1
         self.torre = ['']                    # il primo strato sarÃ  self.torre[0], inizialmente impostato a ''
         self.tipoStratoAttualmenteUsato = 0  # modalitÃ  iniziale = cemento, poichÃ¨ self.tipiStrato[0] = '-'
         self.terminato = False               # imposteremo self.terminato = True quando la Torre sarÃ  completa
@@ -33,6 +33,8 @@ class TorreInCostruzione:
             Condizione su cui ci si mette in attesa quando si vuole esser svegliati solo se la Torre Ã¨ del tutto completa
         '''
         self.attendiFine = Condition(self.lock)
+        self.siamoInUrgenza = False
+        self.saveStrato = -1
         
 
     def printTorre(self):
@@ -52,14 +54,24 @@ class TorreInCostruzione:
     '''
     def addPezzo(self,c) -> bool:
         with self.lock:
+            
+            
+            
+
             '''
                 Se non Ã¨ il mio turno AND la torre Ã¨ da finire -> aspetto
                 Se Ã¨ il mio turno OR la torre Ã¨ finita -> non aspetto
                 Dopo avere atteso, controllo se per caso non ci sono pezzetti da aggiungere: in tal caso pongo Terminato = True, esco e restituisco False;
                 Altrimenti aggiungo il mio pezzetto e restituisco True 
-            '''
-            while self.tipiStrato[self.tipoStratoAttualmenteUsato] != c and not self.terminato:
+
+               
+                STRATOATTUALE = -
+                '''
+            while self.tipiStrato[self.tipoStratoAttualmenteUsato] != c and not self.terminato and (not self.siamoInUrgenza and c == '!'):
                 self.attendiTurno.wait()
+           
+            if (self.tipiStrato[2] == c and not self.siamoInUrgenza):
+                return False
 
             if self.stratoAttuale == self.altFinale - 1 and len(self.torre[self.stratoAttuale]) == self.larghezzaFinale:
                 #
@@ -84,14 +96,100 @@ class TorreInCostruzione:
             #  cambio il tipo di strato da Cemento a Mattoni, o viceversa
             #
             if len(self.torre[self.stratoAttuale]) == self.larghezzaFinale and self.stratoAttuale < self.altFinale - 1:
+                
+                
                 self.stratoAttuale += 1
                 self.torre.append( '' ) # predispongo il prossimo strato 
-                self.tipoStratoAttualmenteUsato = (self.tipoStratoAttualmenteUsato + 1) % 2
+                
+                if self.tipoStratoAttualmenteUsato == 0 : 
+                    self.tipoStratoAttualmenteUsato = 1
+                elif self.tipoStratoAttualmenteUsato == 1:
+                    self.tipoStratoAttualmenteUsato = 0 
+                if (self.tipoStratoAttualmenteUsato == 2):
+                    self.tipoStratoAttualmenteUsato = self.saveStrato
+                    self.siamoInUrgenza = False
+                    self.saveStrato = -1
+                    self.attendiTurno.notifyAll() 
+                    return False
+                if (self.siamoInUrgenza):
+                    self.saveStrato = self.tipoStratoAttualmenteUsato
+                    self.tipoStratoAttualmenteUsato = 2
+
                 self.attendiTurno.notifyAll()
 
-            self.printTorre()
+            # self.printTorre() Punto 2: Lo tolgo per non stampare ogni volta che un operaio aggiunge un pezzo
 
             return True
+    
+    '''
+    Punto 1
+    Arricchisci la classe TorreInCostruzione con il metodo waitForStrato(S : int). Tale metodo pone in
+    attesa il thread chiamante fintantoché gli operai non completano lo strato S. Se S è maggiore dell’altezza finale H della
+    torre, arrotonda S ad H
+    '''
+
+    def waitForStrato(self, S): # S è co se si intendesse l'altezza da raggiungere per far verificare la condizione
+        with self.lock:
+            if S > self.altFinale:
+                S = self.altFinale
+            while self.stratoAttuale < S:
+                self.attendiTurno.wait()
+            prints("Il thread %s ha finito l'attesa per lo strato %d" % (self, S)) 
+    
+    '''
+    Punto 2
+    Nota che il codice fornito stampa periodicamente l’intero array che rappresenta la Torre. Rimuovi questa stampa e
+    introduci un Thread che, sfruttando il metodo waitForStrato, stampi periodicamente, a passi arrotondati al 10%,
+    quanta percentuale della Torre è stata correntemente realizzata. Decidi tu come gestire gli arrotondamenti tra il numero di
+    strati conclusi e la percentuale di completamento. L’output prodotto da questo thread deve essere una sequenza di linee
+    che dicono “10% completato” - “20% completato” - “30% completato” ... ecc
+    '''
+
+    '''
+    Punto 3
+    Introduci il metodo aggiungiStratoUrgente(s : str). Tale metodo può essere invocato durante la
+    costruzione di una Torre, e istanzia due nuovi Operai capaci di aggiungere il carattere s (con un ritardo di 100ms tra una
+    posa e l’altra) a una TorreInCostruzione. I due nuovi operai dovranno lavorare insieme per aggiungere, non appena sia
+    completo lo strato in corso, un nuovo strato fatto di s alla TorreInCostruzione, sospendendo la normale alternanza tra
+    Mattonatori e Cementatori. I due nuovi thread dovranno poi terminare al completamento dello strato aggiuntivo, mentre
+    la costruzione della torre deve riprendere normalmente. L’altezza finale della Torre sarà aumentata da H ad H+1.
+    
+    Un thread chiama aggiungiStratoUrgente, va in attesa fino a quando lo strato corrente non è completato.
+    Dopo appena è completato TUTTI GLI ALTRI OPERAI DEVONO ASPETTARE.
+    '''
+
+    def aggiungiStratoUrgente(self, s):
+        with self.lock:
+            self.siamoInUrgenza = True 
+            self.altFinale += 1  
+            uno = Operaio(self, s, 100) 
+            due = Operaio(self, s, 100)
+            uno.start()
+            due.start()
+
+            
+
+
+
+
+class Display(Thread):
+    def __init__(self, t: TorreInCostruzione):
+        super().__init__()
+        self.torre = t
+        self.percentuale = 0
+    
+    def run(self): 
+        prints("%d%% completato" % self.percentuale)
+        while not self.torre.terminato:
+            self.percentuale += 10
+            #sleep(0.5)
+            self.torre.waitForStrato(self.percentuale)
+            prints("%d%% completato" % self.percentuale) 
+        self.percentuale += 10
+        if self.percentuale > 100:
+                self.percentuale = 100
+        print(("%d%% completato" % self.percentuale) + " - TORRE COMPLETA")
+
 
 class Operaio(Thread):
     
@@ -112,10 +210,15 @@ class Operaio(Thread):
         '''
             Ciclo in cui un operaio aggiunge un pezzo per volta
         '''
-        while(self.torre.addPezzo(self.tipo)):
+        
+        while(self.torre.addPezzo(self.tipo) ):
             sleep(self.durata/1000)
         prints("Thread di tipo: '%s' finito" % self.tipo) 
-           
+
+
+
+
+
 class Cementatore(Operaio):
     '''
         Un cementatore Ã¨ un Operaio che usa il simbolo '-' e ha una cadenza di un pezzo ogni 25ms
@@ -140,6 +243,7 @@ class Torre:
         
     def makeTorre(self,H:int, M:int, C:int): 
         t = TorreInCostruzione(H)
+        Display(t).start() 
         Mattonatori = [Mattonatore(t) for _ in range(M)]
         Cementatori = [Cementatore(t) for _ in range(C)]
         for m in Mattonatori:
@@ -151,6 +255,7 @@ class Torre:
         
 if __name__ == '__main__':
     T = Torre()
+
     print (T.makeTorre(90,4,7)) 
     prints("TORRE FINITA")
     
