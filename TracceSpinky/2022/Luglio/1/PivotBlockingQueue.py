@@ -88,6 +88,10 @@ class PivotBlockingQueue:
                 pivotMultipli = True
 
         self.buffer.remove(pivot) if not pivotMultipli else self.buffer.pop()
+    
+    def setPivotNumber():
+        with self.lock:
+            
 
 '''
     Thread di test

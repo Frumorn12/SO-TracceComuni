@@ -11,6 +11,30 @@ Proprio come le code bloccanti standard, una PivotBlockingQueue puÃ² contenere
 dove N Ã¨ specificato in fase di creazione della struttura dati. Le regole per determinare lâ€™elemento PIVOT
 vengono scelte secondo un particolare criterio che Ã¨ possibile impostare con un metodo apposito.
 '''
+
+"""
+Punto 1
+Si deve modificare la classe PivotBlockingQueue in maniera tale da poter specificare quanti pivot ci sono in ciascun
+momento. Per realizzare questo scopo, introduci il metodo setPivotNumber(self, n : int), che imposta il
+numero di pivot al valore n (n deve essere almeno 1 e al massimo N-1, dove N è la dimensione della coda).
+Il numero di pivot impostato in un certo momento influenza il numero di rimozioni di elementi prescritte. Dovrai fare in
+modo che il cambio della quantità di pivot influenzi i metodi take() e put() per come spiegato di seguito. Facciamo un
+esempio e supponiamo che il numero di pivot venga impostato a due, anziché uno come nel codice preesistente.
+Se i pivot presenti vengono impostati a due, e non più a uno come nel codice esistente, dovrai fare in modo che take()
+elimini due pivot prima di restituire l’elemento richiesto, e cioè il primo massimo/minimo e il secondo massimo/minimo.
+take() dovrà invece bloccarsi fintantochè in coda non ci siano almeno tre elementi (i due pivot da rimuovere più
+l’elemento da estrarre). L’operazione di put resta invece invariata e rimuove un solo pivot nel caso in cui la coda sia piena.
+E’ a tuo carico stabilire come gestire opportunamente il caso in cui ci sono due o più pivot di valore uguale e cioè due o più
+massimi/minimi di pari valore.
+Punto 2
+Si estenda la classe PivotBlockingQueue con il metodo doubleTake(). Tale metodo preleva e restituisce una
+coppia di elementi anziché uno solo, e si blocca se in coda non sono presenti almeno due elementi + i pivot. Decidi tu
+quale sia la codifica migliore per restituire una coppia di interi anziché un solo valore intero. Nota che per risolvere questo
+punto è necessario aver implementato il punto 1.
+Punto 3
+Introduci un metodo waitFor(self, n) che va in attesa bloccante finché la somma degli elementi presenti nella coda
+non supera il valore n specificato, uscendo se la condizione è invece verificata.
+"""
 class PivotBlockingQueue:
     def __init__(self,dim):
         self.dim = dim
