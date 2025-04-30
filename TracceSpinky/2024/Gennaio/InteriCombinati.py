@@ -26,6 +26,20 @@ def dprint(s):
     # Rimane come piccolo difetto il fatto che un lettore che ha giÃ  acquisito il lock in lettura non puÃ² prendere il lock in scrittura anche se Ã¨ l'unico lettore.
     # Questo non crea problemi in questa prova di esame, ma potrebbe in generale dare fastidio in altri contesti.
     #
+
+
+"""
+1. Implementa un meccanismo di timeout per le operazioni in Calcolatrice. Se una certa operazione non viene
+estratta ed elaborata entro un certo tempo, questa viene annullata attraverso l’eliminazione dell’operazione in B. Il
+timeout di una operazione viene fissato in fase di inserimento.
+2. Inventa un meccanismo per arrestare in maniera pulita una istanza di Calcolatrice in esecuzione, ad esempio
+invocando un apposito metodo stop(). Tale metodo deve arrestare in maniera pulita e thread-safe ogni thread
+che compone la calcolatrice.
+3. Arricchisci la classe InteriCombinati con tutto ciò che serve per tenere traccia del numero di operazioni
+effettuate per ciascun tipo di operazione e per ciascun elemento dell’array V, a partire dal momento della creazione
+dell’istanza di classe. Prevedi un apposito metodo che stampi a video le statistiche attuali, e un metodo per azzerare
+le statistiche.
+"""
         
 class DatoCondiviso():
 
