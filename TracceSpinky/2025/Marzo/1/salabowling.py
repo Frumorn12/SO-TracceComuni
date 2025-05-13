@@ -5,26 +5,26 @@ from time import sleep
 from random import randint
 
 '''
-MATERIALE PER LA PROVA SULLA PROGRAMMAZIONE MULTI-THREADED
+MATERIALE PER LA PROVA SULLA PROGRAMMAZIONE MULTI-THREADED 
 
-Il codice fornito implementa un piccolo sistema di gestione di una sala bowling. Una sala da bowling contiene un certo numero di piste P
-e un certo numero N di palle da bowling. Per poter giocare, una squadra composta da M giocatori necessita di avere a disposizione una pista
+Il codice fornito implementa un piccolo sistema di gestione di una sala bowling. Una sala da bowling contiene un certo numero di piste P 
+e un certo numero N di palle da bowling. Per poter giocare, una squadra composta da M giocatori necessita di avere a disposizione una pista 
 e una palla da bowling per ciascun giocatore (dunque devono essere disponibili M palle da bowling).
-Ogni pista puÃ² essere assegnata a una certa squadra, ammesso che sia disponibile un numero di palle da bowling pari al numero di giocatori per la data squadra.
-Ad esempio, se le palle a disposizione sono 10, e in un certo momento una squadra di 6 giocatori occupa la pista n.1,
-una eventuale squadra di 5 giocatori non potrÃ  usufruire della pista n.2, pur essendo questa libera, poichÃ© le restanti 4 palle non sono sufficienti.
+Ogni pista puÃ² essere assegnata a una certa squadra, ammesso che sia disponibile un numero di palle da bowling pari al numero di giocatori per la data squadra. 
+Ad esempio, se le palle a disposizione sono 10, e in un certo momento una squadra di 6 giocatori occupa la pista n.1, 
+una eventuale squadra di 5 giocatori non potrÃ  usufruire della pista n.2, pur essendo questa libera, poichÃ© le restanti 4 palle non sono sufficienti. 
 
 La classe Sala contiene questi metodi:
 
 richiedi_pista(self, id_squadra, num_giocatori: int, modalita_gentile=False) -> int
 
-Il primo metodo consente di richiedere una pista e una dotazione di palle da bowling specificando un certo numero di giocatori.
+Il primo metodo consente di richiedere una pista e una dotazione di palle da bowling specificando un certo numero di giocatori. 
 Se la quantitÃ  di palle richiesta non Ã¨ disponibile, oppure non ci sono piste libere, la squadra viene messa in attesa. Viene restituito il codice della pista che Ã¨ stata assegnata.
 Per come funziona il metodo quando modalita_gentile Ã¨ True, leggi la descrizione del metodo richiedi_pista_gentilmente.
 
-libera_pista(self, num_pista: int, num_giocatori: int)
+libera_pista(self, num_pista: int, num_giocatori: int) 
 
-Il secondo metodo prevede la liberazione di una pista precedentemente occupata e la restituzione delle palle da bowling non piÃ¹ utilizzate.
+Il secondo metodo prevede la liberazione di una pista precedentemente occupata e la restituzione delle palle da bowling non piÃ¹ utilizzate. 
 
 richiedi_pista_gentilmente(self, id_squadra, num_giocatori)
 
@@ -36,41 +36,41 @@ PiÃ¹ in dettaglio, quando arriva il turno per una squadra S, ma contemporaneam
 numero di palle da bowling richiesto per la squadra S, allora il thread chiamante si rimette subito in stato di wait, ma retrocedendo di quattro
 posti nella lista di attesa. Qualora i thread in attesa subito dopo S siano meno di 4, allora S si metterÃ  in coda.
 
-A corredo trovi anche il codice di una classe Squadra che simula il comportamento casuale di una squadra attraverso un thread.
+A corredo trovi anche il codice di una classe Squadra che simula il comportamento casuale di una squadra attraverso un thread. 
 La soluzione fornita elimina i potenziali problemi di starvation accodando le richieste delle squadre secondo l'ordine di arrivo.
 '''
 
 class Sala:
-
+    
     def __init__(self, num_piste, num_palle):
         self.lock = RLock()
         self.condition = Condition(self.lock)
         self.num_piste = num_piste
         self.piste = [False] * num_piste
         self.palle_disponibili = num_palle
-
+        
         self.prossimo_id = 1
         self.lista_attesa = []
 
     def richiedi_pista(self, id_squadra, num_giocatori, modalita_gentile=False):
         with self.lock:
             self.lista_attesa.append(id_squadra)
-
+            
             # Per uscire da questo while devono verificarsi tre condizioni:
             # 1) Deve esserci una pista libera
             # 2) Deve esserci un numero sufficiente di palle per la squadra
             # 3) Deve essere il turno della squadra, ossia id_squadra deve essere il primo elemento della lista_attesa
-            while (pista:=self._cerca_pista() == -1 or # il := significa "assegna a pista il valore di _cerca_pista()"
-                   self.palle_disponibili < num_giocatori or
+            while (pista:=self._cerca_pista() == -1 or 
+                   self.palle_disponibili < num_giocatori or 
                    id_squadra != self.lista_attesa[0]):
 
                 #
                 # Sono in blocco per via delle poche palle disponibili e sono in modalitÃ  gentile, quindi...
-                #
+                #     
                 if modalita_gentile and id_squadra == self.lista_attesa[0] and pista!=-1:
                     self.lista_attesa.pop(0)
                     #
-                    # Siccome mi sto levando dalla cima della lista di attesa, do la possibilitÃ  alla prossima squadra di giocare
+                    # Siccome mi sto levando dalla cima della lista di attesa, do la possibilitÃ  alla prossima squadra di giocare 
                     #
                     self.condition.notify_all()
                     print(f"La squadra {id_squadra} con {num_giocatori} giocatori rimanda il suo turno")
@@ -80,7 +80,7 @@ class Sala:
                         self.lista_attesa.append(id_squadra)
                 print(f"La squadra {id_squadra} con {num_giocatori} giocatori deve attendere il suo turno")
                 self.condition.wait()
-
+                
             self.lista_attesa.pop(0)
             # Essendosi modificata la lista di attesa, notifico per dare la possibilitÃ  alla prossima squadra di provare a giocare
             self.condition.notify_all()
