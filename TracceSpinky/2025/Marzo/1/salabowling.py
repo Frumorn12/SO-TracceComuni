@@ -39,31 +39,62 @@ posti nella lista di attesa. Qualora i thread in attesa subito dopo S siano meno
 A corredo trovi anche il codice di una classe Squadra che simula il comportamento casuale di una squadra attraverso un thread. 
 La soluzione fornita elimina i potenziali problemi di starvation accodando le richieste delle squadre secondo l'ordine di arrivo.
 '''
-
+# esercizio pre esame
+# usare una barrier per regolare il punto 3
+# due squadre possono condividere la pista ma solo insieme
+# e finisco insieme 
 class Sala:
     
     def __init__(self, num_piste, num_palle):
         self.lock = RLock()
         self.condition = Condition(self.lock)
         self.num_piste = num_piste
-        self.piste = [False] * num_piste
+
+        """
+        TIPO ABBIAMO QUATTRO PISTE
+        0  1  2  3
+        F  F  F  F 
+
+        0  1  2  3  -> Numero Piste
+        -1 -1 -1 -1 -> queste variabili ci dicono se la pista è occupata o meno
+        
+        leggenda:
+        -1 = pista libera
+        0 = pista occupata da condiviso
+        1 = pista occupata da condiviso piena
+        2 = pista occupata da non condiviso
+
+
+        
+        
+        """
+        self.piste = [-1] * num_piste
+        
         self.palle_disponibili = num_palle
+        self.id_squadra_prioritaria = -1  
         
         self.prossimo_id = 1
         self.lista_attesa = []
 
-    def richiedi_pista(self, id_squadra, num_giocatori, modalita_gentile=False):
+    def richiedi_pista(self, id_squadra, num_giocatori, modalita_gentile=False, modalita_tamarra=False, condivisione = False): 
         with self.lock:
-            self.lista_attesa.append(id_squadra)
+            if modalita_tamarra:
+                while (self.id_squadra_prioritaria != -1):
+                    self.condition.wait() 
+                print(f"SQUADRA TAMARRA {id_squadra} si infila davanti a tutti!")
+                self.lista_attesa.insert(0, id_squadra)
+            else:
+                self.lista_attesa.append(id_squadra)
+            count = 0             
             
             # Per uscire da questo while devono verificarsi tre condizioni:
             # 1) Deve esserci una pista libera
             # 2) Deve esserci un numero sufficiente di palle per la squadra
             # 3) Deve essere il turno della squadra, ossia id_squadra deve essere il primo elemento della lista_attesa
-            while (pista:=self._cerca_pista() == -1 or 
+            while (pista:=self._cerca_pista(condivisione) == False or #:= è un operatore che assegna in maniera dinamica il
                    self.palle_disponibili < num_giocatori or 
-                   id_squadra != self.lista_attesa[0]):
-
+                   id_squadra != self.lista_attesa[0] ): 
+                
                 #
                 # Sono in blocco per via delle poche palle disponibili e sono in modalitÃ  gentile, quindi...
                 #     
@@ -79,33 +110,71 @@ class Sala:
                     else:
                         self.lista_attesa.append(id_squadra)
                 print(f"La squadra {id_squadra} con {num_giocatori} giocatori deve attendere il suo turno")
+                count += 1 
+                if count == 4 and self.id_squadra_prioritaria == -1 and not modalita_tamarra and not modalita_gentile:   
+                    # mi tolgo dalla posizione in cui ero e mi metto primo
+                    self.lista_attesa.remove(id_squadra)
+                    self.lista_attesa.insert(0, id_squadra) 
+                    self.id_squadra_prioritaria = id_squadra 
                 self.condition.wait()
                 
             self.lista_attesa.pop(0)
+            if self.id_squadra_prioritaria == id_squadra:
+                self.id_squadra_prioritaria = -1 
             # Essendosi modificata la lista di attesa, notifico per dare la possibilitÃ  alla prossima squadra di provare a giocare
             self.condition.notify_all()
             self.palle_disponibili -= num_giocatori
             pista = self._cerca_pista()
-            self.piste[pista] = True
+            if (condivisione):
+                self.piste[pista] += 1
+            else:
+                self.piste[pista] = 2 
             print(f"La squadra {id_squadra} ottiene la pista {pista} con {num_giocatori} giocatori")
             return pista
 
     def richiedi_pista_gentilmente(self, id_squadra, num_giocatori):
         return self.richiedi_pista(id_squadra, num_giocatori, True)
 
-    def libera_pista(self, num_pista, num_giocatori):
+    def libera_pista(self, num_pista, num_giocatori, condivisione = False):
+        # La pista viene liberata e le palle restituite
         with self.lock:
             self.palle_disponibili += num_giocatori
-            self.piste[num_pista] = False
+            if condivisione:
+                self.piste[num_pista] -= 1
+            else:
+                self.piste[num_pista] = -1 
             # Si sono liberate delle risorse, notifico per dare la possibilitÃ  di usare le risorse liberate a chi Ã¨ in attesa
             self.condition.notify_all()
 
+    def print_stato_piste(self): 
+        with self.lock:
+            print(f"Stato piste: {self.piste}")
+            print(f"Palle disponibili: {self.palle_disponibili}")
+            print(f"Lista attesa: {self.lista_attesa}")
+            print(f"ID squadra prioritaria: {self.id_squadra_prioritaria}") 
+
     # Metodo privato usato per individuare la prima pista libera
-    def _cerca_pista(self):
+    def _cerca_pista(self, condivisione = False):
+        if condivisione:
+            for i in range(len(self.piste)):
+                if (self.piste[i] == -1 or self.piste[i] == 1):
+                    return i
+                 
         for i in range(len(self.piste)):
             if not self.piste[i]:
                 return i
-        return -1
+        return False
+
+class Display(Thread):
+    def __init__(self, sala):
+        super(Display, self).__init__()
+        self.sala = sala
+
+    def run(self):
+        while True:
+            sleep(2)
+            self.sala.print_stato_piste()
+
 
 
 class Squadra(Thread):
@@ -128,6 +197,7 @@ class Squadra(Thread):
             sleep(randint(1,4))
             self.sala.libera_pista(pista, num_giocatori)
             print(f"La squadra {self.id_squadra} lascia la pista {pista}.")
+            
 
 if __name__ == '__main__':
     # Crea una sala con 4 piste e 20 palle
